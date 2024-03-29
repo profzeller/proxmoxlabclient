@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  openldap:
+    image: osixia/openldap:1.5.0
+    environment:
+      LDAP_ORGANISATION: "Example Inc."
+      LDAP_DOMAIN: "example.org"
+      LDAP_ADMIN_PASSWORD: "NDGlabpass123!"
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+    ports:
+      - "192.168.100.2:389:389" # LDAP
+      - "192.168.100.2:636:636" # LDAPS
+    restart: always
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "192.168.100.2:8080:80"
+    depends_on:
+      - openldap
+    restart: always
+
+  ntp:
+    image: cturra/ntp
+    ports:
+      - "192.168.100.2:123:123/udp"
+    environment:
+      # NTP_SERVERS
+    restart: always
+    cap_add:
+      - SYS_TIME
+      - SYS_NICE
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "192.168.100.2:53:53/tcp"
+      - "192.168.100.2:53:53/udp"
+      - "192.168.100.2:8081:80" # Web interface
+    environment:
+      TZ: "UTC"
+      WEBPASSWORD: "NDGlabpass123!"
+    volumes:
+      - ./pihole/etc-pihole/:/etc/pihole/
+      - ./pihole/etc-dnsmasq.d/:/etc/dnsmasq.d/
+    restart: always
+
+volumes:
+  ldap_data:
+  ldap_config:
