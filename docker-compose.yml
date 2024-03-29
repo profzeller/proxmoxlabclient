@@ -30,8 +30,6 @@ services:
     image: cturra/ntp
     ports:
       - "192.168.100.2:123:123/udp"
-    environment:
-      # NTP_SERVERS
     restart: always
     cap_add:
       - SYS_TIME
